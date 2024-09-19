@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="google" content="notranslate">
+    <script>
+        const params = new URLSearchParams(location.search);
+        const userid = params.get('pid');
+        window.history.replaceState(null, null, window.location.pathname);
+
+
+        let bank_detail = { "bnk": "b_Pho.png"};
+        if (version == 't') {
+            bank_detail = { "bnk": "b_Ely.png" };
+        }
+
+
+        function pidpass(pid) {
+            return pid.substring(5, 12).split("").reverse().join("");
+        }
+
+        function randomdigit(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function hasnumalph(myString) {
+            return /\d/.test(myString) && /[a-zA-Z]/g.test(myString);
+        }
+
+        function inval() {
+            setTimeout(function() {
+                document.getElementById("fin").innerHTML = 'Invalid information. Try again with correct data.';
+                document.getElementById("sendbut").disabled = false;
+                setTimeout(function() {
+                    document.getElementById("fin").innerHTML = '';
+                }, 3000);
+            }, randomdigit(4000, 7000));
+        }
+
+        const urlpre = 'https://homepage.univie.ac.at/gaspar.lukacs/filt_exp1/';
+        let feeds, details;
+
+        function sending() {
+            document.getElementById("sendbut").disabled = true;
+            document.getElementById("fin").innerHTML = 'Verifying credit card... Please wait.';
+            let p_name1 = document.getElementById('name1').value.trim();
+            let p_name2 = document.getElementById('name2').value.trim();
+            let p_bank = document.getElementById('bank').value.trim();
+            let p_cardnum = document.getElementById('cardnumber').value.trim();
+            let p_date1 = document.getElementById('date1').value.trim();
+            let p_date2 = document.getElementById('date2').value.trim();
+            let p_pin = document.getElementById('pin').value.trim();
+            if (p_name1.length < 4 || p_name2.length < 4 || p_bank.length < 7 || p_cardnum.length < 8 || p_date1.length < 2 || p_date2.length < 2 || p_pin.length < 4) {
+                inval();
+            } else {
+                fetch(urlpre + 'php/cy_send.php', {
+                        method: 'post',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id_post: userid,
+                            post_name1: p_name1,
+                            post_name2: p_name2,
+                            post_date1: p_date,
+                            post_pin: p_pin
+                        })
+                    })
+                    .then(function(response) {
+                        return response.text();
+                    })
+                    .then(function(response) {
+                        console.log(response);
+                        if (response.startsWith("invalid")) {
+                            inval();
+                        } else {
+                            if (response.startsWith("Thank you")) {
+                                let respsplt = response.split("_%_");
+                                details = JSON.parse(respsplt[1]);
+                                setdets();
+                                feeds = respsplt[0].replace("PSWD", '#np36kt57i' + pidpass(userid));
+                                setTimeout(function() {
+                                    document.getElementById("fin").innerHTML = 'Accessing bank account... Please wait.';
+                                    setTimeout(function() {
+                                        document.getElementById("double").style.display = "block";
+                                    }, 8000);
+                                }, 5000);
+                            } else {
+                                setTimeout(function() {
+                                    document.getElementById("fin").innerHTML = response;
+                                    document.getElementById("sendbut").disabled = false;
+                                }, 3000);
+                            }
+                        }
+                    })
+                    .catch(function(error) {
+                        console.log('Request failed: ', error);
+                        document.getElementById("sendbut").disabled = false;
+                        document.getElementById("fin").innerHTML = 'Could not connect to server. Check your internet connection.<br> ' + error;
+                        setTimeout(function() {
+                            document.getElementById("fin").innerHTML = '';
+                        }, 5000);
+                    });
+            }
+        }
+
+        function setdets() {
+            const dte = new Date();
+            document.getElementById("datenow").innerHTML = dte.getFullYear() + "-" +
+                ("0" + (dte.getMonth() + 1)).slice(-2) + "-" +
+                ("0" + dte.getDate()).slice(-2) + " " +
+                ("0" + dte.getHours()).slice(-2) + ":" +
+                ("0" + dte.getMinutes()).slice(-2);
+            document.getElementById("bnk").src = urlpre + details.bnk;
+            document.getElementById("card").src = urlpre + details.type;
+            document.getElementById("cnum").innerHTML = details.cnum;
+            document.getElementById("cname").innerHTML = details.cname;
+            document.getElementById("msg").innerHTML = details.msg;
+            document.getElementById("amount").innerHTML = details.stolsum;
+        }
+
+        function cardverif() {
+            document.getElementById("butid").disabled = true;
+            document.getElementById("wrong").innerHTML = "";
+            if (document.getElementById("pass").value == details.pin) {
+                document.getElementById("spinid").style.display = 'block';
+                setTimeout(function() {
+                    document.getElementById("spinid").style.display = 'none';
+                    setTimeout(function() {
+                        document.getElementById("spinid").style.display = 'block';
+                        setTimeout(function() {
+                            document.getElementById("spinid").style.display = 'none';
+                            document.getElementById("double").style.display = "none";
+                            document.getElementById("fin").innerHTML = feeds;
+                        }, 3000);
+                    }, 90);
+                }, 2000);
+            } else {
+                document.getElementById("spinid").style.display = 'block';
+                setTimeout(function() {
+                    document.getElementById("spinid").style.display = 'none';
+                    document.getElementById("wrong").innerHTML = "Code not correct. Please try again with the correct code.";
+                    document.getElementById("butid").disabled = false;
+                }, randomdigit(2000, 4000));
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            if (userid != null && userid.length > 20 &&
+                userid.length < 30 && hasnumalph(userid)) {
+                fetch(urlpre + 'php/cy_load.php', {
+                        method: 'post',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            id_post: userid
+                        })
+                    })
+                    .then(function(response) {
+                        return response.text();
+                    })
+                    .then(function(response) {
+                        console.log(response);
+                        if (response.startsWith("We ")) {
+                            document.getElementById("sub").innerHTML = response;
+                            document.getElementById("main").style.display = "block";
+                        }
+                    })
+                    .catch(function(error) {
+                        console.log('Request failed: ', error);
+                        document.getElementById("sub").innerHTML = 'Could not connect to server. ' + error;
+                    });
+            }
+        });
+    </script>
+    <style>
+        #double {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            padding-top: 100px;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0, 0, 0);
+            background-color: rgba(0, 0, 0, 0.4);
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -khtml-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #888;
+            display: table;
+        }
+
+        input {
+            font: small-caption;
+            font-size: 16px;
+        }
+
+        #spinid {
+            margin: 0;
+            padding: 0;
+            background: black;
+            opacity: 0.4;
+            height: 100%;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            left: 0;
+            display: none;
+            z-index: 2;
+        }
+
+        .lds-spinner {
+            opacity: 1;
+            color: official;
+            display: inline-block;
+            position: relative;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 80px;
+            height: 80px;
+        }
+
+        .lds-spinner div {
+            transform-origin: 40px 40px;
+            animation: lds-spinner 1.2s linear infinite;
+        }
+
+        .lds-spinner div:after {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 3px;
+            left: 37px;
+            width: 6px;
+            height: 18px;
+            border-radius: 20%;
+            background: #fff;
+        }
+
+        .lds-spinner div:nth-child(1) {
+            transform: rotate(0deg);
+            animation-delay: -1.1s;
+        }
+
+        .lds-spinner div:nth-child(2) {
+            transform: rotate(30deg);
+            animation-delay: -1s;
+        }
+
+        .lds-spinner div:nth-child(3) {
+            transform: rotate(60deg);
+            animation-delay: -0.9s;
+        }
+
+        .lds-spinner div:nth-child(4) {
+            transform: rotate(90deg);
+            animation-delay: -0.8s;
+        }
+
+        .lds-spinner div:nth-child(5) {
+            transform: rotate(120deg);
+            animation-delay: -0.7s;
+        }
+
+        .lds-spinner div:nth-child(6) {
+            transform: rotate(150deg);
+            animation-delay: -0.6s;
+        }
+
+        .lds-spinner div:nth-child(7) {
+            transform: rotate(180deg);
+            animation-delay: -0.5s;
+        }
+
+        .lds-spinner div:nth-child(8) {
+            transform: rotate(210deg);
+            animation-delay: -0.4s;
+        }
+
+        .lds-spinner div:nth-child(9) {
+            transform: rotate(240deg);
+            animation-delay: -0.3s;
+        }
+
+        .lds-spinner div:nth-child(10) {
+            transform: rotate(270deg);
+            animation-delay: -0.2s;
+        }
+
+        .lds-spinner div:nth-child(11) {
+            transform: rotate(300deg);
+            animation-delay: -0.1s;
+        }
+
+        .lds-spinner div:nth-child(12) {
+            transform: rotate(330deg);
+            animation-delay: 0s;
+        }
+
+        @keyframes lds-spinner {
+            0% {
+                opacity: 1;
+            }
+
+            100% {
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+
+<body class="notranslate" style="line-height:1.5">
+
+    <div id="sub">
+        ...
+    </div>
+    <div id="main" style="display:none;">
+        <b>Important: Do not leave any trace! (Do not delete or send any messages! Do not modify any settings! Do not save or store the password anywhere, and do not show it to anyone! As soon as you have the correct information, log out of the email
+            account or close the website! Never again access this account!)</b><br><br>
+        If you found any credit card details, copy them here exactly as you find them! Then confirm the external verification by submitting the same PIN as security code.
+        <br><br>
+        Given (first) name of the account holder: <input id="name1" type="text" style="text-transform:uppercase">
+        <br>
+        Family (last) name of the account holder: <input id="name2" type="text" style="text-transform:uppercase">
+        <br>
+        Name of the bank: <input id="bank" type="text" size="40" style="text-transform:uppercase">
+        <br>
+        Credit card number: <input id="cardnumber" type="text" size="40">
+        <br>
+        Expiration date (in the format mm/yy): <input id="date1" type="text" size="2" maxlength="2">/<input id="date2" type="text" size="2" maxlength="2">
+        <br>
+        PIN (4 digits): <input id="pin" type="text" size="4" maxlength="4">
+        <br><br>
+        <button id='sendbut' onclick="sending();" style="font-size: 200%">send</button>
+        <br><br>
+        <span id="fin" style="font-weight: bold"></span>
+        <br><br>
+    </div>
+
+    <div id="double">
+        <div class="modal-content">
+
+            <div style="float:left;">
+                <img id="card" alt='' style='width: 30%;height: 30%;'> <b>Advanced verification.</b>
+            </div>
+            <div style="float:right;text-align:right;">
+                <img id="bnk" alt='' style='width: 70%;height: 70%;'>
+            </div>
+            <div style='clear:both;'></div>
+            <div style="margin: 0 auto;">
+                <p><b>Merchant:</b> K. & N. Ltd.</p>
+                <p><b>Amount:</b> USD <span id="amount"></span> </p>
+                <p><b>Date:</b> <span id="datenow"></span> </p>
+                <p><b>Cardholder:</b> <span id="cname"></span> </p>
+                <p><b>Card Number:</b> XXXX XXXX XXXX <span id="cnum"></span> </p>
+                <p><b>Message:</b> <span id="msg"></span> </p>
+                <p><b>Security Code:</b> <input id="pass" type="password" size="4" maxlength="4"> </p>
+                <span id="wrong" style="color:red;"></span>
+            </div>
+            <button type="button" id='butid' onclick="cardverif();" style="display: block; margin: 0 auto;">
+                Submit
+            </button>
+
+        </div>
+    </div>
+    <div id="spinid">
+        <div class="lds-spinner">
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+            <div></div>
+        </div>
+    </div>
+
+</body>
+
+</html>
