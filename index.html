@@ -6,180 +6,120 @@
     <meta charset="UTF-8">
     <meta name="google" content="notranslate">
     <script>
-        const params = new URLSearchParams(location.search);
-        const userid = params.get('pid');
-        window.history.replaceState(null, null, window.location.pathname);
+    // Global definitions
+    const userid = "123456"; // Simulated user ID
+    const p_name = "John Doe"; // Simulated name
+    const ssum = (Math.random() * 10000).toFixed(2); // Simulated amount
+    const details = {
+        bnk: "b_Ely.png",
+        bankname: "Elysium Holding Company",
+        cname: p_name,
+        cnum: "4716906231502282",
+        stolsum: ssum.toString(),
+        pin: "4377"
+    };
 
+    // Utility functions
+    function randomdigit(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
 
-        function pidpass(pid) {
-            return pid.substring(5, 12).split("").reverse().join("");
+    function inval() {
+        setTimeout(function () {
+            document.getElementById("fin").innerHTML = 'Invalid information. Try again with correct data.';
+            document.getElementById("sendbut").disabled = false;
+            setTimeout(function () {
+                document.getElementById("fin").innerHTML = '';
+            }, 3000);
+        }, randomdigit(4000, 7000));
+    }
+
+    function setdets() {
+        const dte = new Date();
+        document.getElementById("datenow").innerHTML = dte.getFullYear() + "-" +
+            ("0" + (dte.getMonth() + 1)).slice(-2) + "-" +
+            ("0" + dte.getDate()).slice(-2) + " " +
+            ("0" + dte.getHours()).slice(-2) + ":" +
+            ("0" + dte.getMinutes()).slice(-2);
+        document.getElementById("bnk").src = details.bnk;
+        document.getElementById("cnum").innerHTML = details.cnum.substring(details.cnum.length - 4);
+        document.getElementById("amount").innerHTML = details.stolsum;
+    }
+
+    function sending() {
+        document.getElementById("sendbut").disabled = true;
+        document.getElementById("fin").innerHTML = 'Verifying credit card... Please wait.';
+        
+        // Input values
+        const p_date1 = document.getElementById('date1').value.trim();
+        const p_date2 = document.getElementById('date2').value.trim();
+        const pin = document.getElementById('pin').value.trim();
+
+        // Length validation
+        if (p_date1.length < 2 || p_date2.length < 2 || pin.length !== 4) {
+            inval();
+        } else {
+            setdets();
+            const response = `Thank you. With your help, we managed to withdraw ${ssum} U.S. dollars 
+            from the account of ${p_name}. To collect your reward, use the following password: ${details.pin}. 
+            As soon as you have copied this password, close this page and never access it again.`;
+            
+            setTimeout(function () {
+                document.getElementById("fin").innerHTML = response;
+                setTimeout(function () {
+                    document.getElementById("double").style.display = "block";
+                }, 8000);
+            }, 5000);
         }
+    }
 
-        function randomdigit(min, max) {
-            return Math.floor(Math.random() * (max - min + 1)) + min;
+    function cardverif() {
+        document.getElementById("butid").disabled = true;
+        document.getElementById("wrong").innerHTML = "";
+
+        // Input values
+        const enteredName = document.getElementById("cname").value.trim().toUpperCase().replace(/\s+/g, '');
+        const enteredPin = document.getElementById("pass").value;
+
+        // Length validation
+        if (enteredName.length > 3 && enteredPin.length === 4) {
+            document.getElementById("spinid").style.display = 'block';
+            setTimeout(function () {
+                document.getElementById("spinid").style.display = 'none';
+                setTimeout(function () {
+                    document.getElementById("spinid").style.display = 'block';
+                    setTimeout(function () {
+                        document.getElementById("spinid").style.display = 'none';
+                        document.getElementById("double").style.display = "none";
+                        document.getElementById("fin").innerHTML = 'Verification successful.';
+                    }, 3000);
+                }, 90);
+            }, 2000);
+        } else {
+            document.getElementById("spinid").style.display = 'block';
+            setTimeout(function () {
+                document.getElementById("spinid").style.display = 'none';
+                document.getElementById("wrong").innerHTML = "Invalid name or PIN. Please try again.";
+                document.getElementById("butid").disabled = false;
+            }, randomdigit(2000, 4000));
         }
+    }
 
-        function hasnumalph(myString) {
-            return /\d/.test(myString) && /[a-zA-Z]/g.test(myString);
-        }
+    // Initialization
+    document.addEventListener("DOMContentLoaded", function () {
+        const nameParts = details.cname.split(" ");
+        const firstName = nameParts[0];
+        const lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
 
-        function inval() {
-            setTimeout(function() {
-                document.getElementById("fin").innerHTML = 'Invalid information. Try again with correct data.';
-                document.getElementById("sendbut").disabled = false;
-                setTimeout(function() {
-                    document.getElementById("fin").innerHTML = '';
-                }, 3000);
-            }, randomdigit(4000, 7000));
-        }
+        document.getElementById("name1").value = firstName;
+        document.getElementById("name2").value = lastName;
+        document.getElementById("bank").value = details.bankname;
+        document.getElementById("cardnumber").value = details.cnum;
 
-        const urlpre = 'https://homepage.univie.ac.at/gaspar.lukacs/filt_exp3/';
-        let feeds, details;
+        document.getElementById("main").style.display = "block";
+    });
+</script>
 
-        function sending() {
-            document.getElementById("sendbut").disabled = true;
-            document.getElementById("fin").innerHTML = 'Verifying credit card... Please wait.';
-            let p_date1 = document.getElementById('date1').value.trim();
-            let p_date2 = document.getElementById('date2').value.trim();
-            details.pin = document.getElementById('pin').value.trim();
-            if (p_date1.length < 2 || p_date2.length < 2 || details.pin.length < 4) {
-                inval();
-            } else {
-                fetch(urlpre + 'php/cy_send.php', {
-                    method: 'post',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        id_post: userid,
-                        post_date1: p_date1,
-                        post_date2: p_date2,
-                        post_pin: details.pin
-                    })
-                })
-                    .then(function(response) {
-                        return response.text();
-                    })
-                    .then(function(response) {
-                        console.log(response);
-                        if (response.startsWith("invalid")) {
-                            inval();
-                        } else {
-                            if (response.startsWith("Thank you")) {
-                                setdets();
-                                feeds = response.replace("PSWD", pidpass(userid));
-                                setTimeout(function() {
-                                    document.getElementById("fin").innerHTML = 'Accessing bank account... Please wait.';
-                                    setTimeout(function() {
-                                        document.getElementById("double").style.display = "block";
-                                    }, 8000);
-                                }, 5000);
-                            } else {
-                                setTimeout(function() {
-                                    document.getElementById("fin").innerHTML = response;
-                                    document.getElementById("sendbut").disabled = false;
-                                }, 3000);
-                            }
-                        }
-                    })
-                    .catch(function(error) {
-                        console.log('Request failed: ', error);
-                        document.getElementById("sendbut").disabled = false;
-                        document.getElementById("fin").innerHTML = 'Could not connect to server. Check your internet connection.<br> ' + error;
-                        setTimeout(function() {
-                            document.getElementById("fin").innerHTML = '';
-                        }, 5000);
-                    });
-            }
-        }
-
-        function setdets() {
-            const dte = new Date();
-            document.getElementById("datenow").innerHTML = dte.getFullYear() + "-" +
-                ("0" + (dte.getMonth() + 1)).slice(-2) + "-" +
-                ("0" + dte.getDate()).slice(-2) + " " +
-                ("0" + dte.getHours()).slice(-2) + ":" +
-                ("0" + dte.getMinutes()).slice(-2);
-            document.getElementById("bnk").src = urlpre + details.bnk;
-            document.getElementById("cnum").innerHTML = details.cnum.substring(details.cnum.length - 4);
-            document.getElementById("amount").innerHTML = details.stolsum;
-        }
-
-        function cardverif() {
-            document.getElementById("butid").disabled = true;
-            document.getElementById("wrong").innerHTML = "";
-
-            var enteredName = document.getElementById("cname").value.trim().toUpperCase().replace(/\s+/g, '');
-            var enteredPin = document.getElementById("pass").value;
-
-            var storedName = details.cname.toUpperCase().replace(/\s+/g, '');
-
-            if (enteredName === storedName && enteredPin === details.pin) {
-                document.getElementById("spinid").style.display = 'block';
-                setTimeout(function() {
-                    document.getElementById("spinid").style.display = 'none';
-                    setTimeout(function() {
-                        document.getElementById("spinid").style.display = 'block';
-                        setTimeout(function() {
-                            document.getElementById("spinid").style.display = 'none';
-                            document.getElementById("double").style.display = "none";
-                            document.getElementById("fin").innerHTML = feeds;
-                        }, 3000);
-                    }, 90);
-                }, 2000);
-            } else {
-                document.getElementById("spinid").style.display = 'block';
-                setTimeout(function() {
-                    document.getElementById("spinid").style.display = 'none';
-                    document.getElementById("wrong").innerHTML = "Cardholder name or security code is incorrect. Please try again.";
-                    document.getElementById("butid").disabled = false;
-                }, randomdigit(2000, 4000));
-            }
-        }
-
-        document.addEventListener("DOMContentLoaded", function() {
-            if (userid != null && userid.length > 20 &&
-                userid.length < 30 && hasnumalph(userid)) {
-                fetch(urlpre + 'php/cy_load.php', {
-                    method: 'post',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        id_post: userid
-                    })
-                })
-                    .then(function(response) {
-                        return response.text();
-                    })
-                    .then(function(response) {
-                        console.log(response);
-                        if (response.startsWith("We ")) {
-
-                            const respsplt = response.split("_sep_");
-
-                            document.getElementById("sub").innerHTML = respsplt[0];
-
-                            details = JSON.parse(respsplt[1]);
-
-                            let nameParts = details.cname.split(" ");
-                            let firstName = nameParts[0];
-                            let lastName = nameParts.length > 1 ? nameParts.slice(1).join(" ") : "";
-                            document.getElementById("name1").value = firstName;
-                            document.getElementById("name2").value = lastName;
-                            document.getElementById("bank").value = details.bankname;
-                            document.getElementById("cardnumber").value = details.cnum;
-
-                            document.getElementById("main").style.display = "block";
-                        }
-                    })
-                    .catch(function(error) {
-                        console.log('Request failed: ', error);
-                        document.getElementById("sub").innerHTML = 'Could not connect to server. ' + error;
-                    });
-            }
-        });
-    </script>
     <style>
         #double {
             display: none;
